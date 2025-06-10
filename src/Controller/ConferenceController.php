@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\UX\Turbo\TurboBundle;
 
 final class ConferenceController extends AbstractController
 {
@@ -44,6 +45,7 @@ final class ConferenceController extends AbstractController
     {
         $comment = new Comment();
         $form = $this->createForm(CommentTypeForm::class, $comment);
+        $emptyForm = clone $form;
 
         $form->handleRequest($request);
 
@@ -58,6 +60,15 @@ final class ConferenceController extends AbstractController
 
             $entityManager->persist($comment);
             $entityManager->flush();
+
+            if (TurboBundle::STREAM_FORMAT === $request->getPreferredFormat()) {
+                $request->setRequestFormat(TurboBundle::STREAM_FORMAT);
+
+                return $this->renderBlock('conference/show.html.twig', 'form_stream', [
+                    'comment' => $comment,
+                    'comment_form' => $emptyForm,
+                ]);
+            }
 
             return $this->redirectToRoute('conference', ['slug' => $conference->getSlug()]);
         }

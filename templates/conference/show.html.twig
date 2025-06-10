@@ -8,7 +8,10 @@
     {% if comments|length > 0 %}
         <div>There are {{ comments|length }} comments.</div>
 
+        <div id="comments">
         {% for comment in comments %}
+
+            {% block comment %}
             {% if comment.photofilename %}
                 <img src="{{ asset('uploads/photos/' ~ comment.photofilename) }}" style="max-width: 200px" />
             {% endif %}
@@ -19,7 +22,10 @@
             </small>
 
             <p>{{ comment.text }}</p>
+
+            {% endblock %}
         {% endfor %}
+        </div>
 
         {% if previous >= 0 %}
             <a href="{{ path('conference', { slug: conference.slug, offset: previous }) }}">Previous</a>
@@ -33,5 +39,20 @@
 
     <h2>Add your own feedback</h2>
 
+    <div id="form">
     {{ form(comment_form) }}
+    </div>
+{% endblock %}
+
+{% block form_stream %}
+<turbo-stream action="prepend" targets="#comments">
+    <template>
+        {{ block('comment') }}
+    </template>
+</turbo-stream>
+<turbo-stream action="replace" targets="#form">
+    <template>
+        {{ form(comment_form) }}
+    </template>
+</turbo-stream>
 {% endblock %}
