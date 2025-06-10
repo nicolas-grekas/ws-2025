@@ -7,6 +7,7 @@ use App\Entity\Conference;
 use App\Form\CommentTypeForm;
 use App\Repository\CommentRepository;
 use App\Repository\ConferenceRepository;
+use App\SpamChecker;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -32,6 +33,7 @@ final class ConferenceController extends AbstractController
         Request $request,
         Conference $conference,
         EntityManagerInterface $entityManager,
+        SpamChecker $spamChecker,
         #[Autowire(param: 'photo_dir')]
         string $photoDir,
 
@@ -59,6 +61,17 @@ final class ConferenceController extends AbstractController
             }
 
             $entityManager->persist($comment);
+
+            $context = [
+                'user_ip' => $request->getClientIp(),
+                'user_agent' => $request->headers->get('user-agent'),
+                'referrer' => $request->headers->get('referer'),
+                'permalink' => $request->getUri(),
+            ];
+            if (2 === $spamChecker->getSpamScore($comment, $context)) {
+                throw new \RuntimeException('Blatant spam, go away!');
+            }
+
             $entityManager->flush();
 
             if (TurboBundle::STREAM_FORMAT === $request->getPreferredFormat()) {
