@@ -4,6 +4,7 @@ namespace App;
 
 use App\Repository\ConferenceRepository;
 use Twig\Attribute\AsTwigFunction;
+use Twig\Attribute\AsTwigTest;
 
 class TwigExtension
 {
