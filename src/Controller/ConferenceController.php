@@ -6,6 +6,7 @@ use App\Entity\Conference;
 use App\Repository\CommentRepository;
 use App\Repository\ConferenceRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\AutowireMethodOf;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
@@ -23,12 +24,16 @@ final class ConferenceController extends AbstractController
     #[Route('/conference/{id}', name: 'conference')]
     public function show(
         Conference $conference,
-        CommentRepository $comments,
-        #[MapQueryParameter()]
+
+        #[AutowireMethodOf(CommentRepository::class)]
+        \Closure $getCommentPaginator,
+
+        #[MapQueryParameter(options: ['min_range' => 0])]
         int $offset = 0,
+
     ): Response
     {
-        $paginator = $comments->getCommentPaginator($conference, $offset);
+        $paginator = $getCommentPaginator($conference, $offset);
 
         return $this->render('conference/show.html.twig', [
             'conference' => $conference,
